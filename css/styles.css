@@ -1,0 +1,481 @@
+/* CultureQuest AI - India's Cultural Passport */
+/* Global Styles & Design System */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Montserrat:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Color Palette */
+  --color-saffron: #F4A261;
+  --color-saffron-dark: #E76F51;
+  --color-crimson: #8D0801;
+  --color-crimson-light: #B70911;
+  --color-terracotta: #E07A5F;
+  --color-gold: #D4AF37;
+  --color-gold-light: #E9C46A;
+  --color-emerald: #2A9D8F;
+  --color-emerald-dark: #1E5E4E;
+  --color-indigo: #264653;
+  --color-ink: #1D2021;
+  --color-ink-light: #4A4A4A;
+  --color-parchment: #F4EBD0;
+  --color-parchment-light: #FCF9F2;
+  --color-white: #FFFFFF;
+  --color-success: #2A9D8F;
+  --color-error: #E76F51;
+  
+  /* Shadow Variables */
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.08);
+  --shadow-md: 0 8px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 15px 30px rgba(0,0,0,0.2);
+  --shadow-passport: 0 20px 40px rgba(0,0,0,0.3);
+
+  /* Animation Speeds */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Montserrat', sans-serif;
+  background-color: #1A120B; /* Dark wooden desk background */
+  background-image: radial-gradient(circle, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 100%);
+  color: var(--color-ink);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Wood Desk Decor */
+.wood-desk-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+/* Decorative Desktop Elements (Visible only on larger screens) */
+.desk-element {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.3;
+  transition: opacity 0.3s ease;
+  display: none;
+}
+
+@media (min-width: 769px) {
+  .desk-element {
+    display: block;
+  }
+}
+
+.tea-cup {
+  bottom: 5%;
+  right: 5%;
+  font-size: 5rem;
+  transform: rotate(-15deg);
+}
+
+.vintage-compass {
+  top: 10%;
+  left: 5%;
+  font-size: 6rem;
+  transform: rotate(20deg);
+}
+
+.old-stamps {
+  top: 15%;
+  right: 8%;
+  font-size: 4rem;
+  transform: rotate(-5deg);
+}
+
+.vintage-pen {
+  bottom: 25%;
+  left: 4%;
+  font-size: 6rem;
+  transform: rotate(110deg);
+}
+
+/* Responsive Mobile-First Frame container */
+.app-frame {
+  width: 100%;
+  height: 100vh;
+  background-color: var(--color-parchment-light);
+  box-shadow: none;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Center mobile layout on desktop */
+@media (min-width: 480px) {
+  .app-frame {
+    width: 412px;
+    height: 844px; /* Standard iPhone 12 Pro height */
+    border-radius: 36px;
+    border: 12px solid #2B1D0F; /* Frame border */
+    box-shadow: var(--shadow-passport);
+  }
+}
+
+/* Background parchment pattern */
+.parchment-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 0.45;
+  background-color: var(--color-parchment-light);
+  /* Repeating texture */
+  background-image: 
+    radial-gradient(var(--color-parchment) 1px, transparent 0),
+    radial-gradient(var(--color-parchment) 1px, transparent 0);
+  background-size: 16px 16px;
+  background-position: 0 0, 8px 8px;
+  pointer-events: none;
+}
+
+/* Main Viewport containing active page */
+.app-content {
+  flex: 1;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 1;
+  scroll-behavior: smooth;
+  perspective: 1000px;
+}
+
+/* Header bar */
+.app-header {
+  height: 64px;
+  background-color: var(--color-crimson);
+  color: var(--color-parchment);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  position: relative;
+  z-index: 10;
+  box-shadow: var(--shadow-sm);
+  border-bottom: 2px solid var(--color-gold);
+}
+
+.header-title {
+  font-family: 'Cinzel', serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.header-btn {
+  background: none;
+  border: none;
+  color: var(--color-parchment);
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: transform var(--transition-fast);
+}
+
+.header-btn:hover {
+  transform: scale(1.1);
+  color: var(--color-gold);
+}
+
+.header-btn:active {
+  transform: scale(0.9);
+}
+
+/* Navigation bar */
+.app-nav {
+  height: 68px;
+  background-color: var(--color-ink);
+  color: var(--color-parchment);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-top: 3px solid var(--color-gold);
+  z-index: 10;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-parchment);
+  opacity: 0.6;
+  text-decoration: none;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  flex: 1;
+  height: 100%;
+}
+
+.nav-item i {
+  font-size: 1.35rem;
+  margin-bottom: 3px;
+}
+
+.nav-item.active {
+  opacity: 1;
+  color: var(--color-gold-light);
+  font-weight: 700;
+  background: rgba(255,255,255,0.03);
+}
+
+/* Page base settings & folding transition */
+.page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  flex-direction: column;
+  padding: 20px;
+  overflow-y: auto;
+  opacity: 0;
+  transform: rotateY(15deg) translateX(30px);
+  transform-origin: left center;
+  transition: opacity var(--transition-normal), transform var(--transition-normal);
+  backface-visibility: hidden;
+}
+
+.page.active {
+  display: flex;
+  opacity: 1;
+  transform: rotateY(0deg) translateX(0);
+}
+
+/* Passport Cover Theme Variations */
+.passport-showcase.theme-crimson, .passport-booklet.theme-crimson {
+  background-color: #5C1D1D !important;
+  background-image: radial-gradient(circle at center, #7C2D2D 0%, #4C1818 100%) !important;
+}
+.passport-showcase.theme-blue, .passport-booklet.theme-blue {
+  background-color: #1D2A44 !important;
+  background-image: radial-gradient(circle at center, #2C3E6B 0%, #152035 100%) !important;
+}
+.passport-showcase.theme-emerald, .passport-booklet.theme-emerald {
+  background-color: #1E4D2B !important;
+  background-image: radial-gradient(circle at center, #2D6B3E 0%, #16361F 100%) !important;
+}
+.passport-showcase.theme-saffron, .passport-booklet.theme-saffron {
+  background-color: #D47A37 !important;
+  background-image: radial-gradient(circle at center, #E79F62 0%, #B85F1E 100%) !important;
+}
+
+.cover-option-btn {
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.cover-option-btn.active {
+  border-color: var(--color-gold) !important;
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.7);
+  transform: scale(1.15) translateY(-2px);
+}
+
+/* Custom Scrollbar */
+.app-content::-webkit-scrollbar,
+.page::-webkit-scrollbar {
+  width: 6px;
+}
+
+.app-content::-webkit-scrollbar-track,
+.page::-webkit-scrollbar-track {
+  background: var(--color-parchment);
+}
+
+.app-content::-webkit-scrollbar-thumb,
+.page::-webkit-scrollbar-thumb {
+  background: var(--color-saffron-dark);
+  border-radius: 3px;
+}
+
+/* Typography styles */
+h1, h2, h3, h4, h5 {
+  font-family: 'Cinzel', serif;
+  color: var(--color-crimson);
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+p {
+  line-height: 1.6;
+  font-size: 0.9rem;
+  color: var(--color-ink-light);
+  margin-bottom: 16px;
+}
+
+/* Indian patterns & borders */
+.mandala-border {
+  border: 1px solid var(--color-gold);
+  position: relative;
+  padding: 16px;
+  background-color: var(--color-white);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+.mandala-border::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  border: 1px dashed var(--color-saffron-dark);
+  pointer-events: none;
+  border-radius: 6px;
+}
+
+/* Buttons */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-crimson);
+  color: var(--color-parchment);
+  border: 2px solid var(--color-gold);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+  width: 100%;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-crimson-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  color: var(--color-crimson);
+  border: 2px solid var(--color-crimson);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+.btn-secondary:hover {
+  background-color: rgba(141, 8, 1, 0.05);
+}
+
+.btn-secondary:active {
+  background-color: rgba(141, 8, 1, 0.1);
+}
+
+/* Progress bar global */
+.progress-container {
+  width: 100%;
+  height: 8px;
+  background-color: rgba(0,0,0,0.06);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: var(--color-emerald);
+  width: 0%;
+  transition: width 1s ease-in-out;
+}
+
+/* Textures */
+.texture-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+  mix-blend-mode: multiply;
+  opacity: 0.15;
+  /* Simulating a paper crease/wrinkle overlay */
+  background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.4) 0%, rgba(0,0,0,0.2) 100%);
+}
+
+/* Floating mandala decoration elements */
+.deco-mandala {
+  width: 100px;
+  height: 100px;
+  opacity: 0.08;
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='none' stroke='%238D0801' stroke-width='2'/%3E%3Ccircle cx='50' cy='50' r='30' fill='none' stroke='%238D0801' stroke-width='1' stroke-dasharray='3,3'/%3E%3Cpath d='M50 5 L50 95 M5 50 L95 50 M18 18 L82 82 M18 82 L82 18' stroke='%238D0801' stroke-width='0.5'/%3E%3Cpolygon points='50,15 55,25 65,25 60,35 68,42 58,46 60,57 50,52 40,57 42,46 32,42 40,35 35,25 45,25' fill='none' stroke='%23D4AF37' stroke-width='0.5'/%3E%3C/svg%3E");
+  background-size: contain;
+}
+
+.deco-top-right {
+  top: -20px;
+  right: -20px;
+}
+
+.deco-bottom-left {
+  bottom: -20px;
+  left: -20px;
+}
+
+/* Custom CSS classes for visual highlights */
+.highlight-badge {
+  background-color: var(--color-gold-light);
+  color: var(--color-ink);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-block;
+  margin-bottom: 8px;
+  border: 1px solid var(--color-gold);
+}
+
+.flex-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
