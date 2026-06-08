@@ -1643,3 +1643,137 @@
   color: var(--color-saffron-dark);
 }
 
+/* My Discoveries Section Styling */
+.discoveries-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Scrollbar for discoveries list */
+.discoveries-grid::-webkit-scrollbar {
+  width: 4px;
+}
+.discoveries-grid::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+.discoveries-grid::-webkit-scrollbar-thumb {
+  background: var(--color-gold-light);
+  border-radius: 4px;
+}
+.discoveries-grid::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gold);
+}
+
+.discovery-card {
+  display: flex;
+  align-items: center;
+  background-color: var(--color-white);
+  border: 1.5px solid var(--color-gold-light);
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  position: relative;
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+.discovery-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  border-color: var(--color-gold);
+}
+
+.discovery-thumbnail {
+  width: 50px;
+  height: 50px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1.5px solid var(--color-gold-light);
+  margin-right: 12px;
+  flex-shrink: 0;
+  background-color: var(--color-parchment-light);
+}
+
+.discovery-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.discovery-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-crimson);
+  margin: 0 0 2px 0;
+  font-family: 'Cinzel', serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.discovery-loc {
+  font-size: 0.72rem;
+  color: var(--color-ink-light);
+  margin: 0 0 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.discovery-date {
+  font-size: 0.65rem;
+  color: var(--color-gold-dark);
+  margin: 0;
+  font-style: italic;
+}
+
+.delete-discovery-btn {
+  background: none;
+  border: none;
+  color: var(--color-ink-light);
+  font-size: 0.82rem;
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.2s, background-color 0.2s, transform 0.2s;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.delete-discovery-btn:hover {
+  color: var(--color-error);
+  background-color: rgba(230, 57, 70, 0.08);
+  transform: scale(1.1);
+}
+
+.delete-discovery-btn:active {
+  transform: scale(0.9);
+}
+
+.discovery-placeholder {
+  text-align: center;
+  padding: 30px 20px;
+  background-color: rgba(0,0,0,0.02);
+  border: 1.5px dashed var(--color-gold-light);
+  border-radius: 8px;
+  color: var(--color-ink-light);
+}
+
+.discovery-placeholder i {
+  font-size: 1.5rem;
+  color: var(--color-gold);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.discovery-placeholder p {
+  font-size: 0.78rem;
+  margin: 0;
+  line-height: 1.4;
+}
+
+

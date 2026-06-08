@@ -21,7 +21,8 @@ let state = {
   correctAnswersCount: 0,
   currentStoryIndex: 0,
   audioMuted: false,
-  aiQuizPassed: false
+  aiQuizPassed: false,
+  discoveries: [] // Array of previously analyzed monuments
 };
 
 // Rank Thresholds
@@ -679,7 +680,8 @@ function resetProgress() {
       correctAnswersCount: 0,
       currentStoryIndex: 0,
       audioMuted: false,
-      aiQuizPassed: false
+      aiQuizPassed: false,
+      discoveries: []
     };
     applyCoverTheme("crimson");
     resetAIAssistant();
@@ -1107,6 +1109,13 @@ function initAIAssistant() {
   // Hide API key warning by default
   document.getElementById("ai-key-warning").style.display = "none";
   
+  if (aiActiveMonument) {
+    document.getElementById("ai-discoveries-section").style.display = "none";
+  } else {
+    document.getElementById("ai-discoveries-section").style.display = "block";
+    renderDiscoveriesList();
+  }
+  
   if (aiUploadWired) return;
   
   const uploadBox = document.getElementById("ai-upload-box");
@@ -1166,6 +1175,7 @@ function analyzeImage(base64Data, mimeType) {
   document.getElementById("ai-error").style.display = "none";
   document.getElementById("ai-results").style.display = "none";
   document.getElementById("ai-key-warning").style.display = "none";
+  document.getElementById("ai-discoveries-section").style.display = "none";
   
   fetch("/api/identify", {
     method: "POST",
@@ -1183,6 +1193,11 @@ function analyzeImage(base64Data, mimeType) {
     
     if (data.success) {
       aiActiveMonument = data;
+      // Generate thumbnail and save to discoveries
+      const previewImgSrc = document.getElementById("ai-image-preview").src;
+      createThumbnail(previewImgSrc, (thumbData) => {
+        saveDiscovery(data, thumbData);
+      });
       renderAIResults(data);
     } else {
       showAIError(data.error_message || "The uploaded image was not recognized as an Indian cultural heritage site or object. Please try a different photo.");
@@ -1205,6 +1220,7 @@ function showAIError(msg) {
   document.getElementById("ai-error-msg").textContent = msg;
   document.getElementById("ai-error").style.display = "flex";
   document.getElementById("ai-results").style.display = "none";
+  document.getElementById("ai-discoveries-section").style.display = "none";
 }
 
 function renderAIResults(monument) {
@@ -1288,6 +1304,158 @@ function switchAITab(tabName) {
   if (activePane) activePane.classList.add("active");
 }
 
+// My Discoveries helper functions
+function createThumbnail(base64Data, callback) {
+  if (!base64Data) {
+    callback(null);
+    return;
+  }
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement("canvas");
+    const maxDim = 120; // 120px bounding box
+    let width = img.width;
+    let height = img.height;
+    
+    if (width > height) {
+      if (width > maxDim) {
+        height = Math.round((height * maxDim) / width);
+        width = maxDim;
+      }
+    } else {
+      if (height > maxDim) {
+        width = Math.round((width * maxDim) / height);
+        height = maxDim;
+      }
+    }
+    
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, width, height);
+    
+    try {
+      const thumbData = canvas.toDataURL("image/jpeg", 0.7);
+      callback(thumbData);
+    } catch (e) {
+      console.error("Failed to generate thumbnail:", e);
+      callback(null);
+    }
+  };
+  img.onerror = () => {
+    callback(null);
+  };
+  img.src = base64Data;
+}
+
+function saveDiscovery(monumentData, thumbnailData) {
+  if (!state.discoveries) {
+    state.discoveries = [];
+  }
+  
+  // Prevent duplicate entries
+  const exists = state.discoveries.some(d => d.name.toLowerCase() === monumentData.name.toLowerCase());
+  if (exists) return;
+  
+  const discovery = {
+    name: monumentData.name,
+    location: monumentData.location,
+    history: monumentData.history,
+    significance: monumentData.significance,
+    architecture: monumentData.architecture,
+    facts: monumentData.facts || [],
+    related: monumentData.related || [],
+    did_you_know: monumentData.did_you_know || "",
+    thumbnail: thumbnailData,
+    timestamp: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+  };
+  
+  state.discoveries.unshift(discovery); // Add to beginning of array
+  saveState();
+  renderDiscoveriesList();
+}
+
+function renderDiscoveriesList() {
+  const listContainer = document.getElementById("ai-discoveries-list");
+  const countSpan = document.getElementById("discoveries-count");
+  
+  if (!listContainer) return;
+  
+  const discoveries = state.discoveries || [];
+  countSpan.textContent = discoveries.length;
+  
+  if (discoveries.length === 0) {
+    listContainer.innerHTML = `
+      <div class="discovery-placeholder">
+        <i class="fas fa-compass"></i>
+        <p>No discoveries yet. Upload a photo of a monument or artifact to start your collection!</p>
+      </div>
+    `;
+    return;
+  }
+  
+  listContainer.innerHTML = "";
+  discoveries.forEach((disc, index) => {
+    const card = document.createElement("div");
+    card.className = "discovery-card";
+    card.onclick = () => loadDiscovery(index);
+    
+    const imgHtml = disc.thumbnail 
+      ? `<img src="${disc.thumbnail}" class="discovery-thumbnail" alt="${disc.name}">`
+      : `<div class="discovery-thumbnail" style="display: flex; align-items: center; justify-content: center; color: var(--color-gold); font-size: 1.25rem;"><i class="fas fa-monument"></i></div>`;
+      
+    card.innerHTML = `
+      ${imgHtml}
+      <div class="discovery-info">
+        <h4 class="discovery-title">${disc.name}</h4>
+        <p class="discovery-loc"><i class="fas fa-map-marker-alt" style="margin-right: 4px; font-size: 0.65rem;"></i>${disc.location}</p>
+        <span class="discovery-date">Discovered: ${disc.timestamp}</span>
+      </div>
+      <button class="delete-discovery-btn" title="Delete discovery" onclick="deleteDiscovery(${index}, event)">
+        <i class="fas fa-trash-alt"></i>
+      </button>
+    `;
+    listContainer.appendChild(card);
+  });
+}
+
+function deleteDiscovery(index, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  
+  if (confirm("Remove this monument from your discoveries?")) {
+    playSound('click');
+    state.discoveries.splice(index, 1);
+    saveState();
+    renderDiscoveriesList();
+  }
+}
+
+function loadDiscovery(index) {
+  playSound('click');
+  const disc = state.discoveries[index];
+  if (!disc) return;
+  
+  aiActiveMonument = disc;
+  
+  // Configure preview image
+  const previewImg = document.getElementById("ai-image-preview");
+  if (disc.thumbnail) {
+    previewImg.src = disc.thumbnail;
+  } else {
+    previewImg.src = ""; // Or placeholder
+  }
+  
+  document.getElementById("ai-preview-box").style.display = "block";
+  document.getElementById("ai-upload-placeholder").style.display = "none";
+  document.getElementById("ai-discoveries-section").style.display = "none";
+  document.getElementById("ai-error").style.display = "none";
+  
+  renderAIResults(disc);
+}
+
 function resetAIAssistant(e) {
   if (e) {
     e.preventDefault();
@@ -1309,6 +1477,10 @@ function resetAIAssistant(e) {
   document.getElementById("ai-error").style.display = "none";
   document.getElementById("ai-key-warning").style.display = "none";
   document.getElementById("ai-did-you-know-card").style.display = "none";
+  
+  // Show discoveries list on reset
+  document.getElementById("ai-discoveries-section").style.display = "block";
+  renderDiscoveriesList();
 }
 
 function sendAIChatMessage() {
