@@ -70,7 +70,7 @@ class AIRequestHandler(http.server.SimpleHTTPRequestHandler):
                 "message": "Gemini API key is not configured. Please set the GEMINI_API_KEY environment variable or create a config.json file in the root directory containing {\"GEMINI_API_KEY\": \"your_key\"}."
             }
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
         
         req = urllib.request.Request(
             url,
