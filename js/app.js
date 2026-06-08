@@ -1380,6 +1380,8 @@ function generateAIQuiz() {
   if (!aiActiveMonument) return;
   playSound('click');
   
+  const difficulty = document.getElementById("ai-quiz-difficulty").value;
+  
   // Show loading in the button
   const genBtn = document.getElementById("ai-gen-quiz-btn");
   const origText = genBtn.innerHTML;
@@ -1389,7 +1391,7 @@ function generateAIQuiz() {
   fetch("/api/quiz", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ monument: aiActiveMonument })
+    body: JSON.stringify({ monument: aiActiveMonument, difficulty: difficulty })
   })
   .then(res => {
     if (!res.ok) {
@@ -1406,7 +1408,7 @@ function generateAIQuiz() {
     aiQuizCurrentIdx = 0;
     aiQuizScore = 0;
     
-    document.getElementById("ai-quiz-title").textContent = `${aiActiveMonument.name} Quiz`;
+    document.getElementById("ai-quiz-title").textContent = `${aiActiveMonument.name} Quiz (${difficulty.toUpperCase()})`;
     document.getElementById("ai-quiz-screen").style.display = "flex";
     
     renderAIQuizQuestion();

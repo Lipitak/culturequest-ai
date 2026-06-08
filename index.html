@@ -605,13 +605,23 @@
               </div>
 
               <!-- Action buttons -->
-              <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <button class="btn-primary" id="ai-gen-quiz-btn" onclick="generateAIQuiz()">
-                  GENERATE QUIZ (5 Qs) <i class="fas fa-graduation-cap" style="margin-left: 8px;"></i>
-                </button>
-                <button class="btn-secondary" onclick="resetAIAssistant(event)" style="width: auto; padding: 10px 16px;">
-                  Reset
-                </button>
+              <div style="margin-top: 15px;">
+                <label style="font-size: 0.72rem; font-weight: 700; color: var(--color-ink-light); display: block; margin-bottom: 4px; font-family: 'Cinzel', serif;">CHALLENGE DIFFICULTY</label>
+                <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                  <select id="ai-quiz-difficulty" style="flex: 1; padding: 10px; border-radius: 6px; border: 1.5px solid var(--color-gold); font-family: inherit; font-size: 0.8rem; background-color: var(--color-parchment-light); color: var(--color-ink); outline: none;">
+                    <option value="easy">Easy (Foundational Lore)</option>
+                    <option value="medium" selected>Medium (Intermediate Studies)</option>
+                    <option value="hard">Hard (Scholar Level Details)</option>
+                  </select>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                  <button class="btn-primary" id="ai-gen-quiz-btn" onclick="generateAIQuiz()">
+                    GENERATE QUIZ (5 Qs) <i class="fas fa-graduation-cap" style="margin-left: 8px;"></i>
+                  </button>
+                  <button class="btn-secondary" onclick="resetAIAssistant(event)" style="width: auto; padding: 10px 16px;">
+                    Reset
+                  </button>
+                </div>
               </div>
 
               <!-- Related Heritage Sites Section -->

@@ -218,6 +218,7 @@ class AIRequestHandler(http.server.SimpleHTTPRequestHandler):
         try:
             body = self.read_post_body()
             monument = body.get('monument')
+            difficulty = body.get('difficulty', 'medium')
 
             if not monument:
                 self.send_json_response(400, {"error": "BAD_REQUEST", "message": "Monument context is required"})
@@ -225,7 +226,11 @@ class AIRequestHandler(http.server.SimpleHTTPRequestHandler):
 
             prompt = (
                 f"Based on the monument/object '{monument.get('name')}' located in '{monument.get('location')}', "
-                f"generate 5 multiple-choice questions testing the user's knowledge about its history, architecture, and cultural significance.\n"
+                f"generate 5 multiple-choice questions testing the user's knowledge. The difficulty level must be strictly '{difficulty.upper()}'.\n"
+                f"Guidelines for difficulty levels:\n"
+                f"- EASY: simple questions about the main name, obvious visual features, and famous legends.\n"
+                f"- MEDIUM: intermediate details about history, architectural style, and timeline events.\n"
+                f"- HARD: advanced details, specific dates, detailed architectural terms, patronage, and lesser-known historical context.\n\n"
                 f"Provide the output in JSON format with a single key 'questions' containing an array of 5 objects.\n"
                 f"Each object must have the following keys:\n"
                 f"- question (string): The multiple-choice question.\n"
