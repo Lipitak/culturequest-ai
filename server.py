@@ -124,6 +124,7 @@ class AIRequestHandler(http.server.SimpleHTTPRequestHandler):
                 "- significance (string): Cultural, historic, or religious significance.\n"
                 "- architecture (string): Architectural style, key artistic features, or craftsmanship details.\n"
                 "- facts (array of strings): 3-5 interesting or lesser-known facts about the monument/object.\n"
+                "- did_you_know (string): a single standout, highly surprising, or fascinating historical/cultural fact about the monument or object.\n"
                 "- related (array of objects): exactly 3 similar cultural heritage locations in India. Each object must have:\n"
                 "  - name (string): Name of the related heritage site.\n"
                 "  - description (string): A short description of why it is related and what makes it interesting.\n"

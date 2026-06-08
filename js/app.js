@@ -1257,6 +1257,16 @@ function renderAIResults(monument) {
     relatedList.innerHTML = `<p style="font-size: 0.75rem; font-style: italic; color: var(--color-ink-light); margin: 0;">No related sites found.</p>`;
   }
 
+  // Render Did You Know card
+  const didYouKnowText = document.getElementById("ai-did-you-know-text");
+  const didYouKnowCard = document.getElementById("ai-did-you-know-card");
+  if (monument.did_you_know) {
+    didYouKnowText.textContent = monument.did_you_know;
+    didYouKnowCard.style.display = "block";
+  } else {
+    didYouKnowCard.style.display = "none";
+  }
+
   // Show results view
   document.getElementById("ai-results").style.display = "block";
   switchAITab('history');
@@ -1298,6 +1308,7 @@ function resetAIAssistant(e) {
   document.getElementById("ai-loading").style.display = "none";
   document.getElementById("ai-error").style.display = "none";
   document.getElementById("ai-key-warning").style.display = "none";
+  document.getElementById("ai-did-you-know-card").style.display = "none";
 }
 
 function sendAIChatMessage() {
