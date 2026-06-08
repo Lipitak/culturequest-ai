@@ -70,35 +70,46 @@ class AIRequestHandler(http.server.SimpleHTTPRequestHandler):
                 "message": "Gemini API key is not configured. Please set the GEMINI_API_KEY environment variable or create a config.json file in the root directory containing {\"GEMINI_API_KEY\": \"your_key\"}."
             }
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
-        
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(payload).encode('utf-8'),
-            headers={'Content-Type': 'application/json'}
-        )
+        models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-pro", "gemini-3.5-flash"]
+        last_error = None
 
-        try:
-            with urllib.request.urlopen(req) as response:
-                res_body = response.read().decode('utf-8')
-                res_data = json.loads(res_body)
-                
-                # Extract response text
-                candidate = res_data.get('candidates', [{}])[0]
-                content = candidate.get('content', {})
-                parts = content.get('parts', [{}])
-                text = parts[0].get('text', '')
-                return {"text": text}
-        except urllib.error.HTTPError as e:
-            err_body = e.read().decode('utf-8')
+        for model in models_to_try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode('utf-8'),
+                headers={'Content-Type': 'application/json'}
+            )
+
             try:
-                err_data = json.loads(err_body)
-                err_msg = err_data.get("error", {}).get("message", str(e))
-            except Exception:
-                err_msg = err_body or str(e)
-            return {"error": "API_ERROR", "message": f"Gemini API Error: {err_msg}"}
-        except Exception as e:
-            return {"error": "CONNECTION_ERROR", "message": f"Connection Error: {str(e)}"}
+                print(f"[INFO] Sending request to model: {model}...")
+                with urllib.request.urlopen(req) as response:
+                    res_body = response.read().decode('utf-8')
+                    res_data = json.loads(res_body)
+                    
+                    # Extract response text
+                    candidate = res_data.get('candidates', [{}])[0]
+                    content = candidate.get('content', {})
+                    parts = content.get('parts', [{}])
+                    text = parts[0].get('text', '')
+                    return {"text": text}
+            except urllib.error.HTTPError as e:
+                err_body = e.read().decode('utf-8')
+                try:
+                    err_data = json.loads(err_body)
+                    err_msg = err_data.get("error", {}).get("message", str(e))
+                except Exception:
+                    err_msg = err_body or str(e)
+                
+                print(f"[WARNING] Model {model} failed: {err_msg}")
+                last_error = err_msg
+                continue
+            except Exception as e:
+                print(f"[WARNING] Model {model} connection error: {str(e)}")
+                last_error = str(e)
+                continue
+
+        return {"error": "API_ERROR", "message": f"Gemini API Error (All models exhausted): {last_error}"}
 
     def handle_identify(self):
         try:
