@@ -1235,6 +1235,28 @@ function renderAIResults(monument) {
   `;
   aiChatMessages = [];
   
+  // Render related heritage sites
+  const relatedList = document.getElementById("ai-related-sites-list");
+  relatedList.innerHTML = "";
+  if (monument.related && monument.related.length > 0) {
+    monument.related.forEach(site => {
+      const card = document.createElement("div");
+      card.className = "related-site-item";
+      card.style.backgroundColor = "rgba(0,0,0,0.02)";
+      card.style.padding = "10px 12px";
+      card.style.borderRadius = "8px";
+      card.style.borderLeft = "3.5px solid var(--color-gold)";
+      card.style.marginBottom = "8px";
+      card.innerHTML = `
+        <h4 style="font-size: 0.82rem; color: var(--color-crimson); margin-bottom: 3px; font-weight: 700; font-family: 'Cinzel', serif;">${site.name}</h4>
+        <p style="font-size: 0.74rem; color: var(--color-ink-light); margin: 0; line-height: 1.4;">${site.description}</p>
+      `;
+      relatedList.appendChild(card);
+    });
+  } else {
+    relatedList.innerHTML = `<p style="font-size: 0.75rem; font-style: italic; color: var(--color-ink-light); margin: 0;">No related sites found.</p>`;
+  }
+
   // Show results view
   document.getElementById("ai-results").style.display = "block";
   switchAITab('history');

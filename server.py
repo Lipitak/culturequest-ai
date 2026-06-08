@@ -124,6 +124,9 @@ class AIRequestHandler(http.server.SimpleHTTPRequestHandler):
                 "- significance (string): Cultural, historic, or religious significance.\n"
                 "- architecture (string): Architectural style, key artistic features, or craftsmanship details.\n"
                 "- facts (array of strings): 3-5 interesting or lesser-known facts about the monument/object.\n"
+                "- related (array of objects): exactly 3 similar cultural heritage locations in India. Each object must have:\n"
+                "  - name (string): Name of the related heritage site.\n"
+                "  - description (string): A short description of why it is related and what makes it interesting.\n"
                 "- error_message (string): if success is false, explain why (e.g., 'The image does not appear to be an Indian cultural heritage site or object.')."
             )
 
