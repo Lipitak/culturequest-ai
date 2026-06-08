@@ -20,7 +20,8 @@ let state = {
   currentQuestionIndex: 0,
   correctAnswersCount: 0,
   currentStoryIndex: 0,
-  audioMuted: false
+  audioMuted: false,
+  aiQuizPassed: false
 };
 
 // Rank Thresholds
@@ -322,6 +323,8 @@ function navigateTo(pageId) {
     renderAchievements();
   } else if (pageId === "profile") {
     renderProfile();
+  } else if (pageId === "ai-assistant") {
+    initAIAssistant();
   }
 }
 
@@ -563,7 +566,8 @@ function renderAchievements() {
     { id: "culture-master", name: "Master", desc: "Collect all 6 cultural stamps of India", check: () => state.earnedStamps.length >= 6, icon: "👑" },
     { id: "scholar", name: "Scholar", desc: "Listen to a traditional story narration", check: () => state.dailyQuests.find(q => q.id === "listen-story").done, icon: "📜" },
     { id: "sage", name: "Perfect Score", desc: "Earn a stamp with a perfect quiz score", check: () => state.dailyQuests.find(q => q.id === "win-quiz").done, icon: "🧠" },
-    { id: "level-up", name: "Level Ascent", desc: "Reach Level 3 Explorer status", check: () => state.level >= 3, icon: "⛰️" }
+    { id: "level-up", name: "Level Ascent", desc: "Reach Level 3 Explorer status", check: () => state.level >= 3, icon: "⛰️" },
+    { id: "ai-explorer", name: "AI Explorer", desc: "Pass an AI-generated monument quiz", check: () => state.aiQuizPassed, icon: "🤖" }
   ];
 
   list.forEach(badge => {
@@ -674,9 +678,11 @@ function resetProgress() {
       currentQuestionIndex: 0,
       correctAnswersCount: 0,
       currentStoryIndex: 0,
-      audioMuted: false
+      audioMuted: false,
+      aiQuizPassed: false
     };
     applyCoverTheme("crimson");
+    resetAIAssistant();
     saveState();
     navigateTo("landing");
     showNotification("Passport reset successfully.");
@@ -1085,6 +1091,383 @@ function toggleAudioMute() {
     muteIcon.className = "fas fa-volume-up";
   }
   saveState();
+}
+
+// ==========================================
+// 10. AI Assistant & Dynamic AI Quiz Systems
+// ==========================================
+let aiUploadWired = false;
+let aiActiveMonument = null;
+let aiChatMessages = [];
+let aiQuizQuestions = [];
+let aiQuizCurrentIdx = 0;
+let aiQuizScore = 0;
+
+function initAIAssistant() {
+  // Hide API key warning by default
+  document.getElementById("ai-key-warning").style.display = "none";
+  
+  if (aiUploadWired) return;
+  
+  const uploadBox = document.getElementById("ai-upload-box");
+  const fileInput = document.getElementById("ai-image-input");
+  
+  // File selection
+  fileInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) handleAIUpload(file);
+  });
+  
+  // Drag & drop handlers
+  uploadBox.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    uploadBox.style.borderColor = "var(--color-saffron-dark)";
+    uploadBox.style.backgroundColor = "rgba(212, 175, 55, 0.08)";
+  });
+  
+  uploadBox.addEventListener("dragleave", () => {
+    uploadBox.style.borderColor = "var(--color-gold)";
+    uploadBox.style.backgroundColor = "rgba(212, 175, 55, 0.02)";
+  });
+  
+  uploadBox.addEventListener("drop", (e) => {
+    e.preventDefault();
+    uploadBox.style.borderColor = "var(--color-gold)";
+    uploadBox.style.backgroundColor = "rgba(212, 175, 55, 0.02)";
+    const file = e.dataTransfer.files[0];
+    if (file) handleAIUpload(file);
+  });
+  
+  aiUploadWired = true;
+}
+
+function handleAIUpload(file) {
+  if (file.size > 5 * 1024 * 1024) {
+    alert("File is too large. Max size allowed is 5MB.");
+    return;
+  }
+
+  // Display Preview
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById("ai-image-preview").src = e.target.result;
+    document.getElementById("ai-preview-box").style.display = "block";
+    document.getElementById("ai-upload-placeholder").style.display = "none";
+    
+    // Trigger Analysis
+    analyzeImage(e.target.result, file.type);
+  };
+  reader.readAsDataURL(file);
+}
+
+function analyzeImage(base64Data, mimeType) {
+  // Show loading
+  document.getElementById("ai-loading").style.display = "flex";
+  document.getElementById("ai-error").style.display = "none";
+  document.getElementById("ai-results").style.display = "none";
+  document.getElementById("ai-key-warning").style.display = "none";
+  
+  fetch("/api/identify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ image: base64Data, mimeType: mimeType })
+  })
+  .then(res => {
+    if (!res.ok) {
+      return res.json().then(err => { throw err; });
+    }
+    return res.json();
+  })
+  .then(data => {
+    document.getElementById("ai-loading").style.display = "none";
+    
+    if (data.success) {
+      aiActiveMonument = data;
+      renderAIResults(data);
+    } else {
+      showAIError(data.error_message || "The uploaded image was not recognized as an Indian cultural heritage site or object. Please try a different photo.");
+    }
+  })
+  .catch(err => {
+    document.getElementById("ai-loading").style.display = "none";
+    console.error("AI Identify Error:", err);
+    
+    if (err.error === "API_KEY_MISSING") {
+      document.getElementById("ai-key-warning").style.display = "block";
+      showAIError("Gemini API key missing. Please configure your key as guided in the warning banner above.");
+    } else {
+      showAIError(err.message || "Failed to contact backend server. Make sure server.py is running.");
+    }
+  });
+}
+
+function showAIError(msg) {
+  document.getElementById("ai-error-msg").textContent = msg;
+  document.getElementById("ai-error").style.display = "flex";
+  document.getElementById("ai-results").style.display = "none";
+}
+
+function renderAIResults(monument) {
+  document.getElementById("ai-monument-name").textContent = monument.name;
+  document.getElementById("ai-monument-location").innerHTML = `<i class="fas fa-map-marker-alt" style="margin-right: 6px;"></i> ${monument.location}`;
+  
+  document.getElementById("ai-history-text").textContent = monument.history;
+  document.getElementById("ai-significance-text").textContent = monument.significance;
+  document.getElementById("ai-architecture-text").textContent = monument.architecture;
+  
+  // Render facts
+  const factsList = document.getElementById("ai-facts-list");
+  factsList.innerHTML = "";
+  monument.facts.forEach(fact => {
+    const li = document.createElement("li");
+    li.style.marginBottom = "6px";
+    li.textContent = fact;
+    factsList.appendChild(li);
+  });
+  
+  // Init Chat messages
+  const chatMessages = document.getElementById("ai-chat-messages");
+  chatMessages.innerHTML = `
+    <div class="chat-message model">
+      I have scanned the image and identified it as **${monument.name}** located in **${monument.location}**! <br><br>
+      Feel free to ask me follow-up questions about its history, architectural style, or ask me to generate a quiz!
+    </div>
+  `;
+  aiChatMessages = [];
+  
+  // Show results view
+  document.getElementById("ai-results").style.display = "block";
+  switchAITab('history');
+}
+
+function switchAITab(tabName) {
+  playSound('click');
+  document.querySelectorAll('[data-ai-tab]').forEach(tab => {
+    tab.classList.remove("active");
+  });
+  document.querySelectorAll('.ai-tab-pane').forEach(pane => {
+    pane.classList.remove("active");
+  });
+  
+  const activeTab = document.querySelector(`[data-ai-tab="${tabName}"]`);
+  const activePane = document.getElementById(`pane-ai-${tabName}`);
+  
+  if (activeTab) activeTab.classList.add("active");
+  if (activePane) activePane.classList.add("active");
+}
+
+function resetAIAssistant(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  
+  playSound('click');
+  aiActiveMonument = null;
+  aiChatMessages = [];
+  
+  // Clear file input
+  document.getElementById("ai-image-input").value = "";
+  
+  // Toggle visibility
+  document.getElementById("ai-upload-placeholder").style.display = "flex";
+  document.getElementById("ai-preview-box").style.display = "none";
+  document.getElementById("ai-results").style.display = "none";
+  document.getElementById("ai-loading").style.display = "none";
+  document.getElementById("ai-error").style.display = "none";
+  document.getElementById("ai-key-warning").style.display = "none";
+}
+
+function sendAIChatMessage() {
+  const input = document.getElementById("ai-chat-input");
+  const text = input.value.trim();
+  if (!text || !aiActiveMonument) return;
+  
+  playSound('click');
+  
+  // Render user message
+  const chatMessages = document.getElementById("ai-chat-messages");
+  const userMsgDiv = document.createElement("div");
+  userMsgDiv.className = "chat-message user";
+  userMsgDiv.textContent = text;
+  chatMessages.appendChild(userMsgDiv);
+  
+  // Append to message history
+  aiChatMessages.push({ role: "user", content: text });
+  
+  input.value = "";
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  
+  // Add loading model message bubble
+  const loadingMsgDiv = document.createElement("div");
+  loadingMsgDiv.className = "chat-message model";
+  loadingMsgDiv.innerHTML = `<i class="fas fa-ellipsis-h fa-pulse"></i> Thinking...`;
+  chatMessages.appendChild(loadingMsgDiv);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  
+  // Call API
+  fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ monument: aiActiveMonument, messages: aiChatMessages })
+  })
+  .then(res => {
+    if (!res.ok) {
+      return res.json().then(err => { throw err; });
+    }
+    return res.json();
+  })
+  .then(data => {
+    loadingMsgDiv.remove();
+    
+    // Render answer
+    const modelMsgDiv = document.createElement("div");
+    modelMsgDiv.className = "chat-message model";
+    modelMsgDiv.innerHTML = data.text.replace(/\n/g, "<br>");
+    chatMessages.appendChild(modelMsgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Append to history
+    aiChatMessages.push({ role: "model", content: data.text });
+  })
+  .catch(err => {
+    loadingMsgDiv.remove();
+    console.error("AI Chat Error:", err);
+    
+    const errorMsgDiv = document.createElement("div");
+    errorMsgDiv.className = "chat-message model";
+    errorMsgDiv.style.color = "var(--color-error)";
+    errorMsgDiv.textContent = "Sorry, I encountered an error. Please make sure the backend is online.";
+    chatMessages.appendChild(errorMsgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  });
+}
+
+function generateAIQuiz() {
+  if (!aiActiveMonument) return;
+  playSound('click');
+  
+  // Show loading in the button
+  const genBtn = document.getElementById("ai-gen-quiz-btn");
+  const origText = genBtn.innerHTML;
+  genBtn.disabled = true;
+  genBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Generating...`;
+  
+  fetch("/api/quiz", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ monument: aiActiveMonument })
+  })
+  .then(res => {
+    if (!res.ok) {
+      return res.json().then(err => { throw err; });
+    }
+    return res.json();
+  })
+  .then(data => {
+    genBtn.disabled = false;
+    genBtn.innerHTML = origText;
+    
+    // Start Quiz
+    aiQuizQuestions = data.questions;
+    aiQuizCurrentIdx = 0;
+    aiQuizScore = 0;
+    
+    document.getElementById("ai-quiz-title").textContent = `${aiActiveMonument.name} Quiz`;
+    document.getElementById("ai-quiz-screen").style.display = "flex";
+    
+    renderAIQuizQuestion();
+  })
+  .catch(err => {
+    genBtn.disabled = false;
+    genBtn.innerHTML = origText;
+    console.error("AI Quiz Gen Error:", err);
+    alert("Failed to generate quiz. Please check backend connection.");
+  });
+}
+
+function renderAIQuizQuestion() {
+  const question = aiQuizQuestions[aiQuizCurrentIdx];
+  
+  document.getElementById("ai-quiz-progress-text").textContent = `QUESTION ${aiQuizCurrentIdx + 1} OF 5`;
+  document.getElementById("ai-quiz-question-text").textContent = question.question;
+  
+  const optionsContainer = document.getElementById("ai-quiz-options-box");
+  optionsContainer.innerHTML = "";
+  
+  question.options.forEach((opt, idx) => {
+    const btn = document.createElement("button");
+    btn.className = "quiz-option";
+    btn.innerHTML = opt;
+    btn.onclick = () => selectAIQuizOption(idx);
+    optionsContainer.appendChild(btn);
+  });
+  
+  // Hide feedback and next btn
+  document.getElementById("ai-quiz-feedback-box").classList.remove("show");
+  document.getElementById("ai-quiz-next-btn").style.display = "none";
+}
+
+function selectAIQuizOption(idx) {
+  const question = aiQuizQuestions[aiQuizCurrentIdx];
+  const options = document.querySelectorAll("#ai-quiz-options-box .quiz-option");
+  
+  options.forEach(btn => btn.disabled = true);
+  
+  const isCorrect = idx === question.answer;
+  
+  if (isCorrect) {
+    playSound('correct');
+    options[idx].classList.add("correct");
+    aiQuizScore++;
+  } else {
+    playSound('wrong');
+    options[idx].classList.add("wrong");
+    options[question.answer].classList.add("correct");
+  }
+  
+  const feedback = document.getElementById("ai-quiz-feedback-box");
+  feedback.innerHTML = `
+    <strong>${isCorrect ? '✨ Correct!' : '❌ Incorrect'}</strong>
+    <p style="margin: 6px 0 0 0; font-size: 0.8rem">${question.explanation}</p>
+  `;
+  feedback.classList.add("show");
+  
+  const nextBtn = document.getElementById("ai-quiz-next-btn");
+  nextBtn.style.display = "block";
+  if (aiQuizCurrentIdx === 4) {
+    nextBtn.textContent = "FINISH QUIZ";
+  } else {
+    nextBtn.textContent = "NEXT QUESTION";
+  }
+}
+
+function handleAIQuizNext() {
+  playSound('click');
+  if (aiQuizCurrentIdx < 4) {
+    aiQuizCurrentIdx++;
+    renderAIQuizQuestion();
+  } else {
+    // Finish Quiz
+    closeAIQuizScreen();
+    
+    // Evaluate Result
+    if (aiQuizScore >= 4) {
+      // Pass
+      state.aiQuizPassed = true;
+      addXP(100);
+      playSound('levelup');
+      showNotification(`Perfect study! You scored ${aiQuizScore}/5 on ${aiActiveMonument.name} and unlocked the "AI Explorer" badge! (+100 XP)`);
+    } else {
+      // Fail
+      alert(`You scored ${aiQuizScore}/5. Study the historical details under the tabs and try again!`);
+    }
+  }
+}
+
+function closeAIQuizScreen() {
+  playSound('click');
+  document.getElementById("ai-quiz-screen").style.display = "none";
 }
 
 // Initialise App

@@ -520,6 +520,114 @@
           </div>
         </div>
 
+        <!-- 10. AI-Powered Cultural Heritage Assistant Page -->
+        <div class="page" id="ai-assistant-page">
+          <h2 style="font-size: 1.25rem; margin-bottom: 4px;">AI HERITAGE GUIDE</h2>
+          <p style="font-size: 0.8rem; margin-bottom: 20px;">Upload a photo of any Indian monument, art piece, or artifact to scan its history and talk to our cultural guide.</p>
+
+          <div class="ai-assistant-container">
+            <!-- API Key Missing Prompt -->
+            <div class="mandala-border ai-key-warning-card" id="ai-key-warning" style="display: none; margin-bottom: 16px;">
+              <h3 style="color: var(--color-error); font-size: 0.95rem; margin-bottom: 6px;"><i class="fas fa-key"></i> Gemini API Key Required</h3>
+              <p style="font-size: 0.75rem; margin-bottom: 0;">
+                The AI assistant requires a Google Gemini API Key. Please set the <code>GEMINI_API_KEY</code> environment variable or create a <code>config.json</code> file in the project directory containing: <br>
+                <code>{"GEMINI_API_KEY": "your_actual_api_key"}</code>
+              </p>
+            </div>
+
+            <!-- Image Upload Box -->
+            <div class="image-upload-wrapper" id="ai-upload-box">
+              <input type="file" id="ai-image-input" accept="image/*" style="display: none;">
+              <div class="upload-placeholder" id="ai-upload-placeholder" onclick="document.getElementById('ai-image-input').click()">
+                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                <span class="upload-title">Drag & drop or click to upload</span>
+                <span class="upload-subtitle">Supports JPG, PNG, WebP (Max 5MB)</span>
+              </div>
+              <div class="image-preview-box" id="ai-preview-box" style="display: none;">
+                <img id="ai-image-preview" src="" alt="Uploaded image">
+                <button class="remove-img-btn" id="ai-remove-image-btn" title="Remove image" onclick="resetAIAssistant(event)">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div class="ai-loading-box" id="ai-loading" style="display: none;">
+              <div class="spinner"></div>
+              <span class="loading-text" id="ai-loading-text">Analyzing heritage details...</span>
+            </div>
+
+            <!-- Error Box -->
+            <div class="ai-error-box" id="ai-error" style="display: none;">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span id="ai-error-msg">Failed to identify. Please try a different photo.</span>
+              <button class="btn-secondary" onclick="resetAIAssistant(event)" style="width: auto; margin-top: 10px; padding: 4px 12px; font-size: 0.75rem; border-color: var(--color-error); color: var(--color-error);">Try Again</button>
+            </div>
+
+            <!-- Results View -->
+            <div class="ai-results-wrapper" id="ai-results" style="display: none;">
+              <!-- Identification Card -->
+              <div class="mandala-border ai-info-card">
+                <h3 id="ai-monument-name">Taj Mahal</h3>
+                <span class="highlight-badge" id="ai-monument-location"><i class="fas fa-map-marker-alt"></i> Agra, Uttar Pradesh</span>
+                
+                <!-- Quick Info Tabs -->
+                <div class="city-tabs" style="margin-top: 15px; margin-bottom: 12px;">
+                  <div class="city-tab active" data-ai-tab="history" onclick="switchAITab('history')">History</div>
+                  <div class="city-tab" data-ai-tab="significance" onclick="switchAITab('significance')">Significance</div>
+                  <div class="city-tab" data-ai-tab="architecture" onclick="switchAITab('architecture')">Architecture</div>
+                  <div class="city-tab" data-ai-tab="facts" onclick="switchAITab('facts')">Facts</div>
+                </div>
+
+                <div class="ai-tab-panes">
+                  <div class="ai-tab-pane active" id="pane-ai-history">
+                    <p id="ai-history-text"></p>
+                  </div>
+                  <div class="ai-tab-pane" id="pane-ai-significance">
+                    <p id="ai-significance-text"></p>
+                  </div>
+                  <div class="ai-tab-pane" id="pane-ai-architecture">
+                    <p id="ai-architecture-text"></p>
+                  </div>
+                  <div class="ai-tab-pane" id="pane-ai-facts">
+                    <ul id="ai-facts-list" style="padding-left: 16px; font-size: 0.82rem; line-height: 1.5; color: var(--color-ink-light);">
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action buttons -->
+              <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="btn-primary" id="ai-gen-quiz-btn" onclick="generateAIQuiz()">
+                  GENERATE QUIZ (5 Qs) <i class="fas fa-graduation-cap" style="margin-left: 8px;"></i>
+                </button>
+                <button class="btn-secondary" onclick="resetAIAssistant(event)" style="width: auto; padding: 10px 16px;">
+                  Reset
+                </button>
+              </div>
+
+              <!-- Chatbot Interface -->
+              <div class="ai-chat-box">
+                <div class="chat-header">
+                  <i class="fas fa-robot"></i>
+                  <span>Talk with AI Guide</span>
+                </div>
+                <div class="chat-messages" id="ai-chat-messages">
+                  <div class="chat-message model">
+                    Hello! I am your AI cultural guide. Ask me any follow-up questions about this monument, its architecture, or history!
+                  </div>
+                </div>
+                <div class="chat-input-area">
+                  <input type="text" id="ai-chat-input" placeholder="Ask follow-up questions..." onkeydown="if(event.key==='Enter') sendAIChatMessage()">
+                  <button id="ai-chat-send-btn" onclick="sendAIChatMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </main>
 
       <!-- Stamp Congratulations Overlay -->
@@ -541,6 +649,28 @@
         </button>
       </div>
 
+      <!-- AI Quiz Overlay -->
+      <div class="ai-quiz-overlay" id="ai-quiz-screen" style="display: none;">
+        <div class="quiz-card" style="margin: 0; width: 100%; position: relative;">
+          <button class="ai-quiz-close-btn" onclick="closeAIQuizScreen()">&times;</button>
+          <h2 style="font-size: 1.15rem; margin-bottom: 2px; text-align: center;" id="ai-quiz-title">Monument Quiz</h2>
+          <span class="quiz-progress" id="ai-quiz-progress-text" style="text-align: center; display: block;">QUESTION 1 OF 5</span>
+          <div class="quiz-question" id="ai-quiz-question-text" style="margin-top: 15px;">Question loading...</div>
+          
+          <div class="quiz-options" id="ai-quiz-options-box">
+            <!-- Rendered dynamically -->
+          </div>
+
+          <div class="quiz-feedback" id="ai-quiz-feedback-box">
+            <!-- Correct/incorrect feedback -->
+          </div>
+          
+          <button class="btn-primary" id="ai-quiz-next-btn" style="margin-top: 15px; display: none;" onclick="handleAIQuizNext()">
+            NEXT QUESTION
+          </button>
+        </div>
+      </div>
+
       <!-- App Bottom Navigation Bar -->
       <nav class="app-nav">
         <a href="#" class="nav-item" data-page="map">
@@ -550,6 +680,10 @@
         <a href="#" class="nav-item" data-page="passport">
           <i class="fas fa-passport"></i>
           <span>Passport</span>
+        </a>
+        <a href="#" class="nav-item" data-page="ai-assistant">
+          <i class="fas fa-magic"></i>
+          <span>AI Guide</span>
         </a>
         <a href="#" class="nav-item active" data-page="landing">
           <i class="fas fa-home"></i>
